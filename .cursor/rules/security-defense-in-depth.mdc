@@ -1,0 +1,153 @@
+---
+description: Segurança em camadas — dados sensíveis, sessão e ataques comuns
+alwaysApply: true
+---
+
+# Segurança — camadas de defesa
+
+Segurança é **em camadas (defense in depth)**. Nenhuma medida isolada substitui validação na borda + autorização + proteção de dados + observabilidade.
+
+## Classificação de dados — o que nunca expor
+
+| Classificação | Exemplos | Regra |
+|---------------|----------|-------|
+| **Crítico** | Senhas, tokens, API keys, private keys, CVV, PIN | Nunca logar, retornar em API, enviar ao client ou commitar |
+| **Sensível (PII)** | CPF, RG, endereço completo, e-mail, telefone, data nascimento | Mascarar em logs/UI; criptografar at rest; minimizar coleta |
+| **Financeiro** | Conta bancária, agência, PIX, saldo, extrato, cartão (mesmo parcial) | Tokenização; nunca armazenar PAN/CVV; PCI-DSS quando aplicável |
+| **Corporativo** | Estratégia, contratos, credenciais de infra, `.env` completo | Need-to-know; secrets manager (Vault, AWS SM) |
+| **Sessão** | Session ID, JWT, refresh token, cookies de auth | HttpOnly, Secure, SameSite; rotação; TTL curto |
+
+**Onde NÃO colocar dados sensíveis:**
+
+- Logs, traces, métricas e APM
+- Respostas de API, erros de stack trace em produção
+- Query strings e URLs (`?token=`, `?cpf=`)
+- LocalStorage / sessionStorage (preferir HttpOnly cookies para tokens)
+- Comentários de código, commits, screenshots de PR
+- `.env.example` (apenas placeholders: `API_KEY=your_key_here`)
+- Frontend bundle / HTML renderizado sem encoding
+- Mensagens de erro detalhadas para o usuário final ("user X password invalid" → mensagem genérica)
+
+## Variáveis de ambiente e secrets
+
+```typescript
+// ❌ Nunca
+console.log(process.env);
+logger.info({ config: process.env });
+res.json({ dbUrl: process.env.DATABASE_URL });
+
+// ✅ Correto
+const dbUrl = configService.get('DATABASE_URL'); // validado no boot, não exposto
+logger.info('Database connection established'); // sem valor da URL
+```
+
+- Secrets vêm de vault/secret manager em produção — `.env` só em dev local.
+- Rotacionar credenciais comprometidas; nunca reutilizar secrets entre ambientes.
+- Scan de secrets no CI (git-secrets, Gitleaks, Sonar secret detection).
+- Princípio: código assume que secret **existe**, nunca **contém** o secret.
+
+## Autenticação, sessão e prevenção de roubo de sessão
+
+| Ameaça | Mitigação |
+|--------|-----------|
+| **Session hijacking** | Cookies `HttpOnly` + `Secure` + `SameSite=Strict/Lax`; HTTPS obrigatório |
+| **Session fixation** | Regenerar session ID após login bem-sucedido |
+| **Token theft (XSS)** | Não guardar JWT em localStorage; preferir cookie HttpOnly ou BFF pattern |
+| **Token replay** | TTL curto (access token), refresh com rotação e revogação |
+| **Brute force** | Rate limit + lockout progressivo + CAPTCHA após N tentativas |
+| **Credential stuffing** | MFA, detecção de senhas vazadas (Have I Been Pwned), alertas |
+
+**JWT:** assinar com algoritmo forte (RS256/ES256); validar `exp`, `iss`, `aud`; não colocar PII no payload; blacklist/revogação para logout.
+
+**Logout:** invalidar sessão server-side ou revogar refresh token; limpar cookie client-side.
+
+## Injection e manipulação de input
+
+### SQL Injection
+
+```typescript
+// ❌ Crítico — Sonar blocker
+db.query(`SELECT * FROM users WHERE email = '${email}'`);
+
+// ✅ Parameterized / prepared statements
+db.query('SELECT * FROM users WHERE email = $1', [email]);
+// ORM: use API parametrizada, nunca raw string com concatenação
+```
+
+- Proibir SQL dinâmico montado com input do usuário (incluindo nomes de tabela/coluna).
+- ORMs: cuidado com `$queryRaw` / `execute()` com strings interpoladas.
+- Least privilege no usuário do banco (sem `DROP`, sem `SUPER` em runtime app).
+
+### NoSQL / LDAP / XPath / Command Injection
+
+- Tratar input como dado, nunca como código ou comando.
+- Nunca passar input do usuário para `exec`, `spawn`, `eval`, `Function()`, `os.system`.
+- Sanitizar paths de arquivo — prevenir path traversal (`../../etc/passwd`).
+
+### XSS (Cross-Site Scripting)
+
+- **Output encoding** contextual (HTML, JS, URL, CSS) ao renderizar dados do usuário.
+- **CSP** (Content-Security-Policy) restritiva; evitar `unsafe-inline` quando possível.
+- Frameworks: preferir binding automático (React escapa por padrão); cuidado com `dangerouslySetInnerHTML`.
+- Sanitizar HTML rico com lib allowlist (DOMPurify) se necessário.
+
+### CSRF (Cross-Site Request Forgery)
+
+- Token CSRF em formulários e mutações com cookie-based auth.
+- SameSite cookies + verificar `Origin`/`Referer` em requests sensíveis.
+- APIs stateless com JWT em header (não cookie) reduzem CSRF, mas exigem proteção XSS reforçada.
+
+## Autorização — IDOR e escalonamento de privilégio
+
+- **Default deny:** toda rota/recurso exige verificação explícita de permissão.
+- **IDOR:** nunca confiar só no ID da URL — validar que o usuário autenticado **possui** aquele recurso.
+
+```typescript
+// ❌ IDOR — qualquer user acessa pedido de outro
+getOrder(req.params.orderId);
+
+// ✅ Verificar ownership
+getOrder(req.params.orderId, req.user.id);
+```
+
+- RBAC/ABAC consistente; não expor endpoints admin sem guard.
+- Mass assignment: whitelist de campos no DTO — nunca `...req.body` direto na entidade (`role: 'admin'`).
+
+## Outras ameaças comuns
+
+| Ameaça | Prevenção |
+|--------|-----------|
+| **SSRF** | Validar URLs; blocklist de IPs internos (169.254.x, 127.0.0.1, metadata AWS); sem redirects automáticos para URL do user |
+| **Open redirect** | Whitelist de destinos; nunca `redirect(req.query.url)` |
+| **Insecure deserialization** | Não deserializar dados não confiáveis; evitar pickle/yaml.load/Java ObjectInputStream com input externo |
+| **File upload** | Validar MIME + extensão + tamanho; armazenar fora do webroot; scan antivírus se aplicável |
+| **Broken access control** | Testes automatizados de autorização por role |
+| **Sensitive data in cache** | Não cachear respostas com PII sem TTL curto e chave por usuário |
+| **Timing attacks** | Comparação constant-time para secrets (`crypto.timingSafeEqual`) |
+| **Clickjacking** | Header `X-Frame-Options: DENY` ou CSP `frame-ancestors 'none'` |
+
+## Headers e transporte
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'self'; ...
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), ...
+```
+
+- HTTPS everywhere; HSTS em produção.
+- CORS: origens explícitas — nunca `Access-Control-Allow-Origin: *` com credentials.
+
+## Dependências e supply chain
+
+- `npm audit` / `pip audit` / Dependabot — CVEs **críticos e altos** bloqueiam merge.
+- Lockfile commitado; builds reproduzíveis.
+- Verificar integridade (SRI em CDN, checksums).
+
+## Resposta a incidentes no código
+
+- Erros genéricos para o cliente; detalhes só em logs internos (sem PII/secrets).
+- Audit log para ações sensíveis (login, alteração de permissão, export de dados, pagamento).
+- Capacidade de revogar tokens/sessões em massa se vazamento detectado.

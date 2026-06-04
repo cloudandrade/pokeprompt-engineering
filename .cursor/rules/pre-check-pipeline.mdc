@@ -1,0 +1,213 @@
+---
+description: Pipeline pre-check/pre-CI-CD — lint, typecheck, test, build e code-review final
+alwaysApply: true
+---
+
+# Pre-check / Pre-CI-CD — validação antes de concluir
+
+**Nunca declare a tarefa concluída** sem executar este pipeline no projeto alterado e registrar o resultado.
+
+Ordem obrigatória:
+
+```
+1. Descobrir comandos do projeto
+2. Lint → Typecheck → Test → Build
+3. Corrigir erros (se houver) e reexecutar até passar
+4. Sessão de code-review (sênior/arquiteto)
+5. Só então: tarefa concluída
+```
+
+---
+
+## 1. Descobrir comandos do projeto
+
+Antes de rodar qualquer comando, **inspecione o repositório** — não assuma npm/yarn se o projeto usa outra stack.
+
+### Onde buscar (ordem de prioridade)
+
+1. `package.json` → campo `scripts`
+2. `Makefile` / `justfile`
+3. `pyproject.toml`, `setup.cfg`, `tox.ini`
+4. `Cargo.toml`, `go.mod`, `pom.xml`, `build.gradle`, `*.csproj`
+5. CI: `.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml`
+6. `README.md`, `CONTRIBUTING.md`, `docs/`
+
+### Mapeamento por stack
+
+| Stack | Lint | Typecheck | Test | Build |
+|-------|------|-----------|------|-------|
+| **Node/TS** | `npm run lint` / `pnpm lint` / script ESLint/Biome | `npm run typecheck` / `tsc --noEmit` | `npm test` / `vitest` / `jest` | `npm run build` |
+| **Python** | `ruff check` / `flake8` / `pylint` | `mypy` / `pyright` | `pytest` / `python -m unittest` | `python -m build` / verificar imports |
+| **Go** | `golangci-lint run` | (compilador) | `go test ./...` | `go build ./...` |
+| **Rust** | `cargo clippy` | (compilador) | `cargo test` | `cargo build --release` |
+| **Java/Kotlin** | Checkstyle/SpotBugs via Gradle | compilador | `./gradlew test` / `mvn test` | `./gradlew build` / `mvn package` |
+| **C#** | `dotnet format --verify-no-changes` | compilador | `dotnet test` | `dotnet build` |
+
+### Regras de descoberta
+
+- Use **exatamente** o script definido no projeto (`npm run lint`, não inventar `eslint .`).
+- Monorepo: identifique o pacote/workspace alterado e rode comandos **no diretório correto**.
+- Se o projeto não tiver typecheck explícito, documente "N/A — stack X sem etapa separada" e siga.
+- Se CI rodar comandos diferentes do README, **priorize o CI** (espelha o pipeline real).
+
+### Template de descoberta (registrar antes de executar)
+
+```markdown
+**Stack detectada:** [ex.: Node 20 + pnpm monorepo]
+**Diretório:** [ex.: apps/api]
+| Etapa | Comando | Fonte |
+|-------|---------|-------|
+| Lint | `pnpm lint` | package.json |
+| Typecheck | `pnpm typecheck` | package.json |
+| Test | `pnpm test` | package.json |
+| Build | `pnpm build` | package.json |
+```
+
+---
+
+## 2. Executar o pipeline
+
+Execute **cada etapa em sequência**. Se uma falhar, **pare**, corrija, reexecute **a etapa falha** e as seguintes.
+
+### Lint
+
+- Objetivo: estilo, imports, regras estáticas do projeto.
+- Falhou → corrigir código ou config; **não** desabilitar regra globalmente.
+
+### Typecheck
+
+- Objetivo: erros de tipo antes do runtime.
+- Falhou → corrigir tipos, generics, null safety; evitar `@ts-ignore` sem justificativa.
+
+### Test
+
+- Objetivo: regressão e comportamento esperado.
+- Falhou → corrigir código ou teste; garantir cobertura ≥ 90% no código alterado.
+- Rodar testes **relacionados ao diff** no mínimo; preferir suite completa se viável.
+
+### Build
+
+- Objetivo: compilação/bundle/deploy artifact sem erro.
+- Falhou → corrigir imports, env de build, dependências, paths.
+
+### Registro de execução
+
+```markdown
+## Pre-check — execução
+
+| Etapa | Comando | Resultado |
+|-------|---------|-----------|
+| Lint | `...` | ✅ passou / ❌ falhou |
+| Typecheck | `...` | ✅ / ❌ |
+| Test | `...` | ✅ / ❌ |
+| Build | `...` | ✅ / ❌ |
+```
+
+---
+
+## 3. Tratamento de erros
+
+Se **qualquer etapa falhar**:
+
+1. **Identificar** — capturar mensagem de erro relevante (arquivo, linha, causa).
+2. **Corrigir** — fix mínimo alinhado às regras do projeto.
+3. **Documentar** — listar o que foi resolvido.
+4. **Reexecutar** — etapa corrigida + etapas subsequentes até pipeline verde.
+
+### Template — correções aplicadas
+
+```markdown
+## Correções no pre-check
+
+| Etapa | Erro | Causa | Correção |
+|-------|------|-------|----------|
+| Lint | 'x' is unused | import órfão | Removido import em `file.ts` |
+| Test | timeout em UserService | mock async | Ajustado mock + `await` |
+| Build | Module not found | path alias | Corrigido import relativo |
+```
+
+**Não declarar concluído** com pipeline vermelho ou etapa pulada sem justificativa documentada.
+
+---
+
+## 4. Sessão de code-review final
+
+Após pipeline **100% verde**, faça **self-review como dev sênior / arquiteto** sobre o diff produzido.
+
+### Lentes de análise
+
+| Lente | Perguntas |
+|-------|-----------|
+| **Arquitetura** | Camadas corretas? Acoplamento aceitável? Duplicação evitável? |
+| **Segurança** | Input validado? IDOR? Secrets/PII expostos? SQL parametrizado? |
+| **Performance** | N+1? I/O desnecessário? Cache adequado? |
+| **Manutenibilidade** | Nomes claros? Complexidade ≤ limites? Fácil de testar? |
+| **Testes** | Edge cases? Cobertura no código alterado? Testes determinísticos? |
+| **Contratos** | API/schema/docs atualizados? Breaking changes documentados? |
+
+### Classificar achados
+
+- **Blocker** — corrigir antes de concluir.
+- **Melhoria recomendada** — corrigir se esforço baixo; senão registrar para follow-up.
+- **Observação** — nota para o usuário; opcional.
+
+### Template — code-review final
+
+```markdown
+## Code-review final (sênior/arquiteto)
+
+**Escopo revisado:** [arquivos/módulos alterados]
+
+### Blockers corrigidos
+- [ ] ...
+
+### Melhorias aplicadas
+- ...
+
+### Observações (opcional / follow-up)
+- ...
+
+### Veredito
+✅ Aprovado para entrega — pipeline verde + blockers resolvidos.
+```
+
+Se encontrar **blocker** na review → corrigir → rerodar etapas afetadas do pre-check → revisar novamente.
+
+---
+
+## 5. Critério de conclusão da tarefa
+
+A tarefa só está **concluída** quando **todas** as condições forem verdadeiras:
+
+- [ ] Pipeline pre-check executado (lint, typecheck, test, build — ou N/A documentado)
+- [ ] Todas as etapas passaram (ou erros foram corrigidos e revalidados)
+- [ ] Correções documentadas (se houve falhas)
+- [ ] Code-review final realizado; blockers resolvidos
+- [ ] Checklist pré-review (Git, segurança, nomenclatura, etc.) atendido
+
+### Resposta final ao usuário (estrutura)
+
+```markdown
+## Entrega — [título]
+
+**Pre-check:** lint ✅ | typecheck ✅ | test ✅ | build ✅
+
+**Correções:** [nenhuma / lista resumida]
+
+**Code-review:** [1–3 bullets de melhorias ou "sem blockers"]
+
+**CoT:** Entendi → Verifiquei → Decidi → Fiz → Validei
+```
+
+---
+
+## Anti-patterns
+
+| Evitar | Fazer |
+|--------|-------|
+| "Pronto!" sem rodar testes | Executar test do projeto |
+| Inventar `eslint .` genérico | Ler `package.json` / CI |
+| Ignorar build quebrado | Corrigir até build passar |
+| Pular typecheck em projeto TS | Rodar `typecheck`/`tsc` do repo |
+| Review superficial | Sessão sênior com lentes acima |
+| Esconder erro corrigido | Documentar na seção de correções |

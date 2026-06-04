@@ -1,0 +1,40 @@
+---
+description: Política de dependências — não adicionar libs sem permissão
+alwaysApply: true
+---
+
+# Dependências e bibliotecas
+
+## Regra principal
+
+**Não adicionar bibliotecas externas sem permissão explícita do usuário ou do time.**
+
+Antes de importar um pacote novo:
+
+1. Verifique se o projeto **já possui** lib equivalente (`package.json`, `go.mod`, `requirements.txt`, `pom.xml`, etc.).
+2. Verifique utilitários internos do repositório (`shared/`, `common/`, `lib/`, `@company/*`).
+3. Se precisar de lib nova → **pergunte primeiro**, informando: nome, motivo, alternativa nativa avaliada, impacto no bundle/tamanho e licença.
+
+## Quando reutilizar o que já existe
+
+| Necessidade | Prioridade |
+|-------------|------------|
+| HTTP client | Lib já usada no projeto (axios, fetch, got, requests…) |
+| Validação | Schema lib do projeto (Zod, Joi, Pydantic…) |
+| Datas | Lib padrão do repo (date-fns, dayjs, java.time…) |
+| UUID/random | Stdlib ou lib já presente |
+| Testes | Runner + matchers + Faker já configurados |
+
+## Se nova dependência for aprovada
+
+- Versão fixada (sem `*` ou range solto em prod).
+- Licença compatível com política da empresa (MIT/Apache OK; GPL pode exigir revisão legal).
+- Verificar última manutenção, downloads e CVEs conhecidos.
+- Documentar no PR **por que** a lib foi escolhida e quais alternativas foram descartadas.
+- Não adicionar lib inteira por uma única função — preferir implementação mínima ou stdlib.
+
+## Proibido sem aprovação
+
+- Copiar código de Stack Overflow/npm gist para dentro do repo como "utilitário".
+- Dependências de autores desconhecidos ou pacotes com typosquatting risk.
+- Libs que executam código remoto, telemetria oculta ou postinstall scripts suspeitos.

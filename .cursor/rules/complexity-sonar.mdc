@@ -1,0 +1,64 @@
+---
+description: Limites de complexidade e issues SonarQube (críticas e médias)
+alwaysApply: true
+---
+
+# Complexidade e análise estática (SonarQube)
+
+Antes de abrir PR, analise mentalmente (ou rode localmente) como o SonarQube analisaria o código. O objetivo é **zero issues críticas/blocker** e **zero issues médias evitáveis** no código alterado.
+
+## Métricas de complexidade — limites recomendados
+
+| Métrica | Limite sugerido | Ação se ultrapassar |
+|---------|-----------------|---------------------|
+| Complexidade cognitiva (função) | ≤ 15 | Extrair subfunções, early return, reduzir nesting |
+| Complexidade ciclomática | ≤ 10 por função | Simplificar condicionais, strategy pattern |
+| Linhas por função | ≤ 40 | Dividir responsabilidades |
+| Parâmetros por função | ≤ 4 | Agrupar em objeto/DTO |
+| Níveis de aninhamento (`if/for`) | ≤ 3 | Guard clauses, extrair bloco |
+| Linhas por arquivo | ≤ 300–400 | Dividir módulo por domínio |
+| Duplicação de código | 0 blocos idênticos > 5 linhas | Extrair função/componente compartilhado |
+| Acoplamento entre classes | Baixo | Interfaces, injeção de dependência |
+
+## Sinais de complexidade excessiva — refatore antes do review
+
+- Função difícil de explicar em uma frase.
+- Múltiplos `switch`/`if-else` encadeados para o mesmo conceito.
+- Flags booleanas que alteram metade do comportamento da função.
+- Classe que conhece detalhes de HTTP, banco, fila e regra de negócio ao mesmo tempo.
+- Testes que precisam de dezenas de mocks para uma única unidade.
+- Comentários longos explicando fluxo que deveria ser código legível.
+
+**Técnicas de redução:** extract method, strategy, polymorphism, pipeline, tabela de decisão, eliminar estado mutável desnecessário.
+
+## Issues críticas / blocker (SonarQube) — nunca mergear
+
+| Categoria | Exemplos | Prevenção |
+|-----------|----------|-----------|
+| **Vulnerabilidades** | SQL injection, command injection, XSS, hardcoded secrets, weak crypto | Aplicar regras de segurança |
+| **Bugs graves** | Resource leak, race condition, null dereference não tratado | try-with-resources, null checks, locks adequados |
+| **Security hotspots** | Credencial em código, deserialização insegura, `eval()` | Scan de secrets, banir APIs perigosas |
+| **Reliability blocker** | Thread não fechada, conexão DB sem close | finally/defer/using, connection pool |
+
+## Issues médias (SonarQube) — corrigir no mesmo PR
+
+| Issue comum | Correção |
+|-------------|----------|
+| Cognitive complexity > 15 | Refatorar função |
+| Duplicated blocks | Extrair helper compartilhado |
+| Empty catch block | Log + rethrow ou tratamento explícito |
+| TODO sem ticket | Associar issue ou remover |
+| `@SuppressWarnings` / `eslint-disable` sem motivo | Corrigir causa raiz ou documentar exceção |
+| Magic numbers | Constantes nomeadas em UPPER_CASE |
+| Função com > 7 parâmetros | DTO de entrada |
+| Uso de deprecated API | Migrar para API suportada |
+| Condição sempre true/false | Remover dead code |
+| String concatenation em loop | StringBuilder/join/template |
+
+## Checklist de auto-análise antes do PR
+
+- [ ] Nenhuma função nova ultrapassa limites de complexidade
+- [ ] Sem duplicação de blocos copiados de outro arquivo
+- [ ] Sem `catch` vazio, `@ts-ignore` ou suppressions desnecessárias
+- [ ] Sem secrets, tokens ou URLs internas hardcoded
+- [ ] SonarQube/linters locais executados sem issues novas no diff

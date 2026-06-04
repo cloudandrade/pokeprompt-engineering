@@ -1,0 +1,81 @@
+---
+description: Git, checklist pré-entrega, anti-patterns e gate final de conclusão
+alwaysApply: true
+---
+
+# Git, code review e checklist
+
+## Commits
+
+- Atômicos: um commit = uma mudança lógica coerente.
+- Mensagem: imperativo, ≤ 72 chars no subject; corpo explica motivo se não óbvio.
+
+## Pull requests
+
+- PR pequeno (< ~400 linhas alteradas quando possível).
+- Descrição: o quê, por quê, como testar.
+- Self-review antes de pedir review — leia o diff como se fosse de outra pessoa.
+- Screenshots/evidência para mudanças visuais.
+
+## Gate de conclusão — ordem obrigatória
+
+Antes de **"tarefa concluída"**, execute nesta ordem:
+
+1. **Pre-check / Pre-CI-CD** — lint → typecheck → test → build (comandos do projeto; corrigir erros)
+2. **Code-review final** — análise sênior/arquiteto do diff
+3. **Checklist pré-review** — itens abaixo
+
+## Checklist pré-review (dev sênior)
+
+Antes de considerar a tarefa concluída, validar:
+
+- [ ] Pre-check executado: lint, typecheck, test e build passaram (comandos do projeto)
+- [ ] Erros do pipeline corrigidos e documentados (se houve falhas)
+- [ ] Code-review final (sênior/arquiteto) realizado; blockers resolvidos
+- [ ] Segue convenções de idioma, nomenclatura e formatação do repo
+- [ ] Buscou no projeto antes de criar arquivo/lógica nova; reutilizou o existente
+- [ ] Variáveis e funções com nomes claros e contextuais (legibilidade)
+- [ ] Constantes em UPPER_CASE; sem magic numbers soltos
+- [ ] Complexidade dentro dos limites; sem duplicação evitável
+- [ ] Nenhuma lib nova sem aprovação; reutilizou o que o projeto já tem
+- [ ] Logs estruturados, nível correto, sem dados sensíveis
+- [ ] Nenhum secret, token, PII ou dado bancário exposto (logs, API, env, frontend)
+- [ ] Queries parametrizadas; autorização verificada (sem IDOR)
+- [ ] Testes unitários com cobertura ≥ 90% no código alterado
+- [ ] Dados de teste via factory/Faker; cenários edge cobertos
+- [ ] Sem código morto, TODOs sem ticket, ou `@ts-ignore` sem justificativa
+- [ ] Erros tratados e propagados corretamente
+- [ ] Documentação/API schema atualizados se contrato mudou
+- [ ] Migrations e rollback considerados
+- [ ] Performance e segurança avaliadas para mudanças sensíveis
+- [ ] SonarQube/linters sem issues críticas ou médias novas no diff
+
+## Anti-patterns que reprovam review
+
+| Anti-pattern | Correção |
+|--------------|----------|
+| Log em português em projeto inglês | Unificar idioma |
+| `const timeout = 5000` solto | `const REQUEST_TIMEOUT_MS = 5000` |
+| Função com complexidade cognitiva 28 | Extrair subfunções; early return |
+| `npm install lodash` para `_.get` | Usar optional chaining nativo ou util do repo |
+| Nova lib sem aprovação do time | Perguntar antes; justificar no PR |
+| Teste só happy path | Adicionar edge cases + erro |
+| Cobertura 40% em service novo | Subir para ≥ 90% ou justificar exclusão |
+| Dados hardcoded repetidos em 20 testes | Factory + Faker |
+| Lógica de negócio no controller | Extrair para service/use case |
+| Catch vazio | Log + rethrow ou erro tipado |
+| PR de 2000 linhas | Dividir em PRs menores |
+| Secret no `.env.example` com valor real | Placeholder fake |
+| `console.log(process.env)` | Remover; nunca logar env |
+| SQL com string interpolada | Prepared statements / ORM parametrizado |
+| JWT no localStorage | HttpOnly cookie ou BFF |
+| `GET /users?token=abc123` | Token só em header/cookie HttpOnly |
+| Retornar stack trace em produção | Erro genérico ao client; detalhe só em log interno |
+| Acesso a `/orders/:id` sem checar owner | Validar autorização + IDOR |
+| Criar util/service duplicado | Buscar no projeto; reutilizar ou estender |
+| Variáveis `data`, `temp`, `flag` | Nomes contextuais (`orderSummary`, `isPaymentConfirmed`) |
+| IA executa feature grande sem plano | Planejamento + aceite antes de executar |
+| IA assume requisito ambíguo | Perguntar com árvore de decisão A/B |
+| Declarar concluído sem rodar pipeline | Lint → typecheck → test → build do projeto |
+| Comando genérico inventado | Ler package.json / Makefile / CI |
+| Build/test falhou e foi ignorado | Corrigir, documentar, reexecutar |

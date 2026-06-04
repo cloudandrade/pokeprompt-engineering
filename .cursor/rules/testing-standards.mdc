@@ -1,0 +1,94 @@
+---
+description: Testes unitários — cobertura 90%, Faker/factories e cenários edge
+alwaysApply: true
+---
+
+# Testes
+
+## Metas mínimas
+
+| Métrica | Meta |
+|---------|------|
+| Cobertura de linhas (unitários) | **≥ 90%** em código de domínio e services |
+| Cobertura de branches | **≥ 85%** em lógica condicional crítica |
+| Testes de integração | Fluxos principais e contratos de API |
+| Regressão | Todo bug fix deve incluir teste que falharia antes do fix |
+
+Exclua da meta de cobertura: arquivos de config, migrations, generated code, main/bootstrap — documente exclusões no CI.
+
+## Pirâmide de testes
+
+```
+        /\
+       /E2E\          poucos, críticos
+      /------\
+     / integr \       contratos, DB, filas
+    /----------\
+   /  unitários \     maioria, rápidos, isolados
+  /--------------\
+```
+
+## Unitários — o que testar
+
+- **Happy path** e **edge cases** (vazio, null, limites, overflow).
+- **Erros esperados** (exceções, códigos HTTP, validações).
+- **Comportamento, não implementação** — evite testar detalhes internos que mudam com refactor.
+- **Determinismo:** testes não podem depender de ordem de execução, horário real ou rede (mock/stub).
+
+## Dados de teste — Faker e factories
+
+Use bibliotecas de geração de dados para evitar fixtures frágeis e repetitivas:
+
+| Linguagem | Biblioteca comum |
+|-----------|------------------|
+| JavaScript/TypeScript | `@faker-js/faker`, `factory.ts`, `@ngneat/falso` |
+| Python | `Faker`, `factory_boy`, `hypothesis` (property-based) |
+| Java/Kotlin | `javafaker`, `EasyRandom`, `Instancio` |
+| Go | `gofakeit`, factories manuais tipadas |
+| C# | `Bogus`, `AutoFixture` |
+
+**Padrão recomendado — factory + seed fixo em CI:**
+
+```typescript
+import { faker } from '@faker-js/faker';
+
+// Seed fixo em CI para reprodutibilidade; aleatório local opcional
+faker.seed(process.env.CI ? 42 : Date.now());
+
+export function buildUser(overrides?: Partial<User>): User {
+  return {
+    id: faker.string.uuid(),
+    email: faker.internet.email(),
+    name: faker.person.fullName(),
+    ...overrides,
+  };
+}
+
+// No teste: dados específicos só onde importa
+const user = buildUser({ email: 'fixed@test.com' });
+```
+
+**Fixtures estáticas:** use apenas para cenários golden file ou snapshots estáveis.
+
+**Property-based / inputs aleatórios:** em lógica com muitas combinações (parsers, validadores, pricing), considere `fast-check`, `hypothesis` ou `@fast-check/jest` para gerar centenas de inputs automaticamente.
+
+## Nomenclatura de testes
+
+Padrão: `should_[expectedBehavior]_when_[condition]`
+
+```
+should_return_404_when_user_not_found
+should_calculate_discount_when_coupon_is_valid
+```
+
+## Mocks
+
+- Mock apenas colaboradores externos (DB, HTTP, fila, relógio).
+- Prefira fakes in-memory para repositórios quando possível.
+- Verifique interações críticas (ex.: "email foi enfileirado"), não cada chamada irrelevante.
+
+## CI
+
+- Testes rodam em todo PR; build quebra se cobertura cair abaixo do threshold.
+- Sem testes `@skip` / `.only` / `.skip` commitados.
+- Paralelização e timeout por suite para evitar flakiness silenciosa.

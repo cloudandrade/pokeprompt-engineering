@@ -1,0 +1,211 @@
+---
+description: Princípios, nomenclatura, arquitetura, código limpo, logs, API, DB, performance e documentação
+alwaysApply: true
+---
+
+# Padrões de desenvolvimento sênior
+
+Objetivo: produzir código que passe em code review de time sênior na primeira tentativa.
+
+## Princípios gerais
+
+- **Consistência acima de preferência pessoal.** Antes de escrever código, observe o padrão existente no módulo, pacote ou repositório e replique-o.
+- **Mudança mínima necessária.** Resolva o problema pedido sem refatorar, renomear ou reorganizar código não relacionado.
+- **Legibilidade > cleverness.** Código óbvio e direto é preferível a abstrações prematuras ou truques difíceis de manter.
+- **Fail fast, fail loud.** Valide entradas cedo; erros devem ser explícitos, rastreáveis e com contexto suficiente para debug.
+- **Sem código morto.** Não deixe imports, variáveis, comentários obsoletos ou blocos comentados "para depois".
+- **Sem segredos no código.** Credenciais, tokens e chaves ficam em variáveis de ambiente ou vault — nunca commitados, logados ou expostos em API.
+- **Sem libs novas por padrão.** Reutilize dependências e utilitários do projeto; peça permissão antes de adicionar pacote externo.
+- **Complexidade controlada.** Se a função ficou difícil de ler ou testar, simplifique antes do PR.
+
+## Reutilização antes de criar
+
+**Antes de criar arquivo, função, classe, componente ou utilitário novo**, busque no projeto se já existe equivalente.
+
+### Checklist de descoberta
+
+1. Buscar por nome, responsabilidade e termos do domínio (grep, busca semântica, estrutura de pastas).
+2. Verificar módulos compartilhados: `shared/`, `common/`, `lib/`, `utils/`, `helpers/`, `@company/*`.
+3. Verificar se a lógica já existe parcialmente em service, hook, middleware ou teste reutilizável.
+4. Se existir → **estender ou reutilizar**; não duplicar com outro nome.
+
+### Quando criar algo novo
+
+- Não há implementação equivalente no repo.
+- Estender o existente violaria SRP ou acoplaria módulos incompatíveis — documente no PR por quê.
+- Arquivo novo segue convenção de pasta e nomenclatura do projeto.
+
+```typescript
+// ❌ Criar utils/formatCurrency.ts sem buscar
+// ✅ Encontrou formatMoney em shared/currency — reutilizar ou extrair para lá se genérico
+```
+
+## Idioma e nomenclatura
+
+### Idioma do projeto
+
+| Contexto | Regra |
+|----------|-------|
+| Logs, mensagens de erro, exceções, métricas, eventos de observabilidade | **Mesmo idioma do projeto.** Se o projeto usa inglês, mantenha inglês. Não misture PT/EN no mesmo módulo. |
+| Comentários de código | Idioma do time/projeto (geralmente o mesmo dos logs). |
+| Nomes de variáveis, funções, classes, arquivos, endpoints, tabelas | **Inglês** (padrão de mercado), salvo convenção explícita do repositório. |
+| Documentação de API (OpenAPI, README técnico) | Idioma definido pelo projeto; se não houver, inglês. |
+| Commits e PRs | Idioma do time; mensagens claras no imperativo ("Add user validation", "Fix null pointer in checkout"). |
+
+### Convenções de nomenclatura
+
+```
+CONSTANTS_AND_ENUM_VALUES     → SCREAMING_SNAKE_CASE (UPPER_CASE)
+classes / types / interfaces  → PascalCase
+functions / methods           → camelCase (JS/TS/Java) ou snake_case (Python/Rust conforme idioma)
+variables / parameters        → camelCase ou snake_case conforme linguagem
+private/internal members      → prefixo ou convenção da linguagem (_prefix, #field)
+files / modules               → kebab-case ou snake_case conforme ecossistema
+environment variables         → SCREAMING_SNAKE_CASE
+database columns              → snake_case (salvo ORM que imponha outro padrão)
+HTTP routes                   → kebab-case, plural para recursos (/users, /order-items)
+```
+
+**Constantes:** valores imutáveis, magic numbers nomeados e chaves de config fixa **sempre** em caixa alta.
+
+```typescript
+// ✅ Correto
+const MAX_RETRY_ATTEMPTS = 3;
+const DEFAULT_PAGE_SIZE = 20;
+const HTTP_STATUS_NOT_FOUND = 404;
+
+// ❌ Evitar
+const maxRetryAttempts = 3;
+const default_page_size = 20;
+```
+
+### Clareza e legibilidade nos nomes
+
+**Priorize clareza de leitura** — o nome deve revelar intenção, contexto de domínio e unidade quando aplicável.
+
+| Ruim (genérico) | Bom (contextual) |
+|-----------------|------------------|
+| `data`, `info`, `result` | `orderSummary`, `paymentReceipt`, `validationErrors` |
+| `temp`, `aux`, `x` | `retryCount`, `normalizedEmail`, `pendingInvoices` |
+| `flag`, `status` | `isPaymentConfirmed`, `subscriptionStatus` |
+| `process()` | `calculateOrderTotal()` |
+| `handle()` | `sendPasswordResetEmail()` |
+
+Regras:
+
+- Nomeie variáveis pelo **papel no fluxo atual**, não por tipo técnico (`userList` > `array`).
+- Booleanos: prefixo `is`, `has`, `can`, `should` (`isEligibleForDiscount`).
+- Coleções no plural; item singular (`orders`, `order`).
+- Evite abreviações obscuras (`cfg`, `mgr`, `proc`) — salvo siglas do domínio (CPF, IBAN, HTTP).
+- Mesmo contexto → mesmos termos (não alternar `customer`/`client`/`user` sem motivo).
+- Funções: verbo + objeto (`validatePaymentInput`, `fetchActiveSubscriptions`).
+
+## Arquitetura e design
+
+### Camadas e responsabilidades
+
+- **Separation of concerns:** controller/handler → service/use-case → repository/gateway. Cada camada com uma responsabilidade clara.
+- **Dependency inversion:** dependa de abstrações (interfaces/ports), não de implementações concretas.
+- **Domain no centro:** regras de negócio ficam na camada de domínio/application, não em controllers ou ORM.
+- **Thin controllers, fat services:** handlers apenas orquestram HTTP/CLI/eventos; lógica fica abaixo.
+- **DTOs na borda:** nunca exponha entidades de persistência diretamente na API.
+
+### Padrões recomendados
+
+| Situação | Abordagem |
+|----------|-----------|
+| Lógica de negócio complexa | Use cases / application services |
+| Integração externa | Adapters/gateways com interface própria |
+| Estado compartilhado | Injeção de dependência; evitar singletons globais mutáveis |
+| Configuração | Centralizada, tipada, validada no boot |
+| Feature flags | Serviço dedicado ou provider, não `if` espalhado |
+| Eventos assíncronos | Outbox pattern ou fila quando consistência importa |
+
+### O que evitar em code review
+
+- God classes e funções com mais de ~40 linhas sem justificativa.
+- Acoplamento circular entre módulos.
+- Lógica duplicada (DRY com moderação — duplicação acidental > abstração errada).
+- `any` / tipos frouxos sem motivo documentado.
+- Side effects escondidos em getters ou funções com nome que não indica efeito.
+- Catch genérico que engole erro (`catch (e) {}` ou `except: pass`).
+
+## Código limpo
+
+### Funções e métodos
+
+- Uma função, uma responsabilidade.
+- Máximo de 3–4 parâmetros; acima disso, use objeto/DTO de entrada.
+- Retornos previsíveis: evite `null` quando optional types ou Result/Either forem suportados.
+- Early return para reduzir aninhamento.
+
+### Comentários
+
+- Comente **por quê**, não **o quê** — o código deve explicar o quê.
+- TODO/FIXME devem ter ticket/issue associado (`// TODO(JIRA-123): ...`).
+- Não comente código óbvio.
+
+### Tratamento de erros
+
+- Mensagens de erro com contexto: o quê falhou, identificadores relevantes (sem PII sensível).
+- Use exceções tipadas ou códigos de erro estáveis para APIs.
+- Propague ou transforme erros na camada correta; não logue e engula na mesma função.
+- Transações: rollback em falha; idempotência em retentativas.
+
+## Logs e observabilidade
+
+- **Nível adequado:** `debug` (dev), `info` (fluxo normal), `warn` (degradado recuperável), `error` (falha que precisa ação).
+- **Estruturado:** preferir JSON/logs estruturados com campos fixos (`level`, `message`, `traceId`, `userId`, `durationMs`).
+- **Correlação:** propague `traceId`/`requestId` em toda a cadeia.
+- **Não logue:** senhas, tokens, cartões, CPF completo, payloads com dados sensíveis.
+- **Consistência de idioma:** mensagens de log no idioma do projeto.
+- **Métricas:** contadores para falhas/sucesso, histogramas para latência — nomes em snake_case ou convenção do stack (Prometheus, etc.).
+
+```json
+{
+  "level": "error",
+  "message": "Failed to process payment",
+  "traceId": "abc-123",
+  "orderId": "ord_456",
+  "errorCode": "PAYMENT_GATEWAY_TIMEOUT"
+}
+```
+
+## API e contratos
+
+- Versionamento explícito (`/v1/...`) ou header quando breaking changes forem frequentes.
+- Validação de input na borda (schema: Zod, Joi, class-validator, Pydantic).
+- Respostas de erro padronizadas: `{ "error": { "code", "message", "details" } }`.
+- Paginação consistente (`cursor` ou `offset/limit` — um padrão por API).
+- Idempotency-Key em operações mutáveis críticas (pagamentos, pedidos).
+- OpenAPI/Swagger atualizado junto com o código.
+
+## Banco de dados
+
+- Migrations versionadas e reversíveis quando possível.
+- Índices para colunas usadas em WHERE/JOIN/ORDER BY de queries frequentes.
+- N+1: use eager loading ou queries batch; detecte em review.
+- Transações com escopo mínimo necessário.
+- Soft delete vs hard delete: siga o padrão do domínio; documente.
+- Nunca concatene SQL com input do usuário — parameterized queries sempre.
+
+## Performance
+
+- Meça antes de otimizar (profiler, APM, EXPLAIN ANALYZE).
+- Cache com TTL e estratégia de invalidação definida — não cache infinito sem plano.
+- Lazy loading vs eager: decisão consciente, não acidental.
+- Evite alocações e I/O desnecessários em hot paths.
+- Timeouts e circuit breakers em chamadas externas.
+
+## Formatação e lint
+
+- Use formatter e linter do projeto (Prettier, ESLint, Ruff, golangci-lint, etc.) — **nunca** desabilite regra globalmente sem consenso.
+- Imports ordenados conforme config do repo.
+- Linha máxima: respeite limite do projeto (geralmente 80–120 cols).
+- Hooks de pre-commit (lint + test) devem passar antes do push.
+
+## Documentação mínima exigida
+
+- README com setup, env vars necessárias e como rodar testes.
+- ADR (Architecture Decision Record) para decisões estruturais relevantes.
+- JSDoc/docstrings apenas em APIs públicas, comportamento não óbvio ou contratos de lib interna.

@@ -889,6 +889,36 @@ Blocker na review → corrigir → rerodar etapas afetadas → revisar de novo.
 
 ---
 
+## 18. Challenge Workflow — desafio 3 prompts
+
+**Válido a partir do Prompt 001.** O Prompt 000 é setup e não conta no limite.
+
+| Regra | Valor |
+|-------|-------|
+| Prompts de implementação | **Exatamente 3** (001 foundation, 002 core, 003 delivery) |
+| Commits | **1 commit por prompt** de implementação |
+| Log linear | Registrar em `prompts/00X-*.md` + `prompts/linear-log.md` |
+| Few-shot | Estruturar prompts como `docs/few-shots.md` |
+
+### A cada prompt 001–003
+
+1. Identificar fase; planejamento + aceite se necessário
+2. Executar só escopo da fase — sem scope creep
+3. Registrar prompt verbatim + entregáveis + CoT no arquivo `prompts/00X-*.md`
+4. Atualizar `prompts/linear-log.md`
+5. Pre-check + code-review final
+6. **Um commit:** `feat: prompt 00X — <fase>`
+
+### Projeto sugerido
+
+API de registro linear de prompts (`POST/GET /prompts`). Ver `README.md`.
+
+### Conclusão
+
+Desafio concluído somente após prompt 003 commitado, log completo e pre-check verde.
+
+---
+
 ## Referência rápida — anti-patterns que reprovam review
 
 | Anti-pattern | Correção |

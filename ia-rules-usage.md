@@ -44,6 +44,7 @@ Os arquivos em `.cursor/rules/` com `alwaysApply: true` entram no contexto do ag
 | `security-defense-in-depth.mdc` | Segurança, dados sensíveis, SQLi, XSS, sessão, IDOR |
 | `pre-check-pipeline.mdc` | Pre-check/pre-CI-CD: lint, typecheck, test, build, correções e code-review final |
 | `pre-review-checklist.mdc` | Git, PR, gate de conclusão, checklist e anti-patterns |
+| `challenge-workflow.mdc` | Desafio: 3 prompts, log linear, 1 commit/prompt, few-shots |
 
 Cada `.mdc` contém o **texto completo** do tópico — não referencia outros arquivos.
 
@@ -112,6 +113,7 @@ Antes de concluir: rode lint, typecheck, test e build (comandos do projeto) e fa
 | § 8 | `testing-standards.mdc` |
 | § 11 | `security-defense-in-depth.mdc` |
 | § 17 | `pre-check-pipeline.mdc` |
+| § 18 | `challenge-workflow.mdc` |
 | § 13 + anti-patterns | `pre-review-checklist.mdc` |
 
 ### Fluxo recomendado
@@ -149,8 +151,14 @@ Em `pre-review-checklist.mdc` (Cursor) e nas seções 13.3 + anti-patterns do `i
 
 ```
 prompt-engineering/
+├── README.md                 ← desafio + regras + como compartilhar
+├── docs/few-shots.md         ← exemplos de prompts 001–003
+├── prompts/                  ← log linear do desafio
+│   ├── linear-log.md
+│   └── 000-setup.md
 ├── .cursor/
-│   └── rules/                    ← Fonte da verdade no Cursor
+│   └── rules/                ← Fonte da verdade no Cursor
+│       ├── challenge-workflow.mdc
 │       ├── senior-dev-standards.mdc
 │       ├── prompt-engineering.mdc
 │       ├── complexity-sonar.mdc

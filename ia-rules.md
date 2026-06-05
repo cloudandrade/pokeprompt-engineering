@@ -889,33 +889,33 @@ Blocker na review → corrigir → rerodar etapas afetadas → revisar de novo.
 
 ---
 
-## 18. Challenge Workflow — desafio 3 prompts
+## 18. Challenge Workflow — desafio few-shot
 
-**Válido a partir do Prompt 001.** O Prompt 000 é setup e não conta no limite.
+**Válido a partir do Prompt 001.** Prompts 000/000b = setup; desafio **ainda não iniciado** até o 001.
 
-| Regra | Valor |
-|-------|-------|
-| Prompts de implementação | **Exatamente 3** (001 foundation, 002 core, 003 delivery) |
-| Commits | **1 commit por prompt** de implementação |
-| Log linear | Registrar em `prompts/00X-*.md` + `prompts/linear-log.md` |
-| Few-shot | Estruturar prompts como `docs/few-shots.md` |
+### Objetivo
 
-### A cada prompt 001–003
+Projeto base (backend **ou** frontend **ou** adaptar/consumir API) usando estratégia de **few-shots**.
 
-1. Identificar fase; planejamento + aceite se necessário
-2. Executar só escopo da fase — sem scope creep
-3. Registrar prompt verbatim + entregáveis + CoT no arquivo `prompts/00X-*.md`
-4. Atualizar `prompts/linear-log.md`
-5. Pre-check + code-review final
-6. **Um commit:** `feat: prompt 00X — <fase>`
+### Regras
 
-### Projeto sugerido
+1. **Estrutura própria** de ensino/preparação da IA — não copiar colega.
+2. **Few-shot livre** — participante escolhe estratégias; documentar no log.
+3. **Log linear** em `prompts/00X-*.md` + `linear-log.md`. **Meta:** 3 prompts; se precisar de mais, continuar até concluir.
+4. **Stack livre** — backend, frontend, API própria ou consumo de API externa.
+5. **Obrigatório:** listar com **paginação**, detalhar **por ID**, buscar **com filtro**.
+6. **Ao finalizar:** verificar resultado (pre-check) e compartilhar.
+7. **Regra principal:** aprender com o processo e se divertir.
 
-API de registro linear de prompts (`POST/GET /prompts`). Ver `README.md`.
+### A cada prompt 001+
+
+Registrar prompt verbatim, estratégia few-shot, entregáveis, CoT; atualizar `linear-log.md`; pre-check quando houver código.
 
 ### Conclusão
 
-Desafio concluído somente após prompt 003 commitado, log completo e pre-check verde.
+Projeto concluído quando as 3 features obrigatórias existem, resultado verificado e compartilhado. Sem penalidade por >3 prompts.
+
+Ver `README.md` e `docs/few-shots.md` (referência opcional).
 
 ---
 

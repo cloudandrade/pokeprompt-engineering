@@ -44,7 +44,7 @@ Os arquivos em `.cursor/rules/` com `alwaysApply: true` entram no contexto do ag
 | `security-defense-in-depth.mdc` | Segurança, dados sensíveis, SQLi, XSS, sessão, IDOR |
 | `pre-check-pipeline.mdc` | Pre-check/pre-CI-CD: lint, typecheck, test, build, correções e code-review final |
 | `pre-review-checklist.mdc` | Git, PR, gate de conclusão, checklist e anti-patterns |
-| `challenge-workflow.mdc` | Desafio: 3 prompts, log linear, 1 commit/prompt, few-shots |
+| `challenge-workflow.mdc` | Desafio few-shot: log linear, meta 3 prompts, features obrigatórias |
 
 Cada `.mdc` contém o **texto completo** do tópico — não referencia outros arquivos.
 
@@ -90,7 +90,7 @@ Se o editor tiver sistema de regras persistentes (ex.: Windsurf rules, Copilot i
 Você é um dev sênior. Antes de escrever código, leia e aplique @ia-rules.md.
 Prioridades: segurança, testes (≥90% cobertura), baixa complexidade, sem libs novas sem perguntar.
 Em tarefas não triviais: apresente plano e aguarde "pode executar" antes de implementar.
-Antes de concluir: rode lint, typecheck, test e build (comandos do projeto) e faça code-review final.
+Desafio few-shot: ver README.md — meta 3 prompts, log em prompts/, features listar+detalhe+filtro.
 ```
 
 ---

@@ -1,164 +1,111 @@
 # Prompt Engineering Challenge
 
-Desafio colaborativo para **construir um projeto real em no máximo 3 prompts**, aplicando boas práticas de prompt-engineering e de código sênior — e provando o processo com commits, log linear e pre-check.
+Desafio para **aprender few-shot prompt-engineering** construindo um projeto real — sozinho ou com amigos.
 
-Compartilhe com amigos, compare abordagens e veja quem entrega o melhor resultado com o menor número de prompts.
+> **Ainda não iniciado.** Este README define as regras. O desafio começa no **Prompt 001**.
 
 ---
 
 ## Objetivo
 
-1. **Documentar** um conjunto de regras reutilizáveis para IA (Cursor, Windsurf, Claude, etc.).
-2. **Praticar** prompt-engineering de verdade: planejamento, few-shot, chain of thought, árvore de decisão.
-3. **Entregar** um projeto funcional em **exatamente 3 prompts de implementação** (após o setup).
-4. **Registrar** cada prompt e cada entrega de forma **linear** e auditável.
-5. **Validar** com pre-check (lint, typecheck, test, build) antes de fechar cada etapa.
+Criar um **projeto base** usando a estratégia de **few-shots** em prompt-engineering.
 
-Este repositório contém as **regras** (`.cursor/rules/` + `ia-rules.md`) e o **log do desafio** (`prompts/`).
+O projeto pode ser:
 
----
-
-## O desafio em 30 segundos
-
-| Regra | Detalhe |
-|-------|---------|
-| **Prompts de implementação** | Mínimo **3**, máximo **3** |
-| **1 prompt = 1 commit** | Cada prompt gera **um commit** com tudo que foi feito naquele passo |
-| **Log linear** | Todo prompt do usuário + entrega da IA → `prompts/` |
-| **Few-shot** | Usar exemplos de prompts bons (`docs/few-shots.md`) |
-| **Boas práticas** | Seguir regras do repo (sênior + prompt-engineering + pre-check) |
-| **Pre-check** | Lint → typecheck → test → build antes de concluir cada prompt |
-| **Válido a partir de** | Prompt **001** (este README/setup é o **000**) |
+- **Backend** ou **frontend**
+- **Adaptação** de uma API que você já tem
+- **Consumo** de uma API pública da sua preferência (OpenWeather, PokéAPI, etc.)
 
 ---
 
-## Projeto sugerido (meta-desafio)
+## Regras do desafio
 
-Construir uma **API + persistência** que registre prompts e entregas de forma linear — o app **é** o desafio:
+### 1. Sua estrutura, seu aprendizado
 
-- `POST /prompts` — registrar prompt do usuário + resposta/resumo da IA
-- `GET /prompts` — listar histórico linear (ordem cronológica)
-- `GET /prompts/:id` — detalhe de uma entrada
+Use **sua própria** estrutura de ensino e preparação da IA (metaprompt, plano, exemplos, etc.).
 
-Amigos podem trocar por outro escopo (todo app, CLI, etc.), desde que mantenham as **regras do desafio** (3 prompts, log, commits, pre-check).
+**Não vale copiar** a do colega — o comparativo entre amigos fica justo e o aprendizado é individual.
 
----
+### 2. Few-shot é o desafio
 
-## Estrutura do repositório
+Escolha **quais estratégias de few-shot** achar melhor (exemplos no prompt, templates, chain-of-thought, decomposição por fase).
+
+Documente **no log** o que funcionou e o que não funcionou.
+
+### 3. Log linear em `prompts/`
+
+Cada prompt seu + o que a IA fez → **um arquivo em sequência** na pasta `prompts/`:
 
 ```
-prompt-engineering/
-├── README.md                 ← você está aqui
-├── ia-rules.md               ← regras portáveis (outras IDEs/LLMs)
-├── ia-rules-usage.md         ← como usar as regras
-├── docs/
-│   └── few-shots.md          ← exemplos de prompts por fase
-├── prompts/
-│   ├── linear-log.md         ← índice cronológico
-│   ├── 000-setup.md          ← prompt 0 (estrutura do desafio)
-│   ├── 001-foundation.md     ← (próximo) base do projeto
-│   ├── 002-core.md           ← (depois) features + testes
-│   └── 003-delivery.md       ← (depois) polish + pre-check final
-└── .cursor/rules/            ← regras automáticas no Cursor
+prompts/
+├── linear-log.md      ← índice
+├── 001-....md
+├── 002-....md
+└── 003-....md
 ```
 
----
+**Meta:** concluir em **3 prompts**.  
+**Se não der:** tudo bem — serve de aprendizado. Continue registrando (`004`, `005`…) até terminar.
 
-## Como participar (você ou um amigo)
+### 4. Escolha livre de stack
 
-### 1. Fork / clone
+Backend, frontend, adaptar API existente ou consumir API externa — **você escolhe**.
 
-```bash
-git clone <url-do-repo>
-cd prompt-engineering
-```
+### 5. Funcionalidades obrigatórias
 
-### 2. Cursor (recomendado)
+O projeto **deve** ter:
 
-Abra no Cursor — as regras em `.cursor/rules/` já entram automaticamente.
+| Feature | Descrição |
+|---------|-----------|
+| **Listar** | Todos os itens, com **paginação** |
+| **Detalhar** | Um item por **ID** |
+| **Buscar** | Com **algum filtro** (query param, campo, status, etc.) |
 
-Fora do Cursor: inclua `@ia-rules.md` no chat (veja `ia-rules-usage.md`).
+Válido para REST, GraphQL, tela React, etc. — adapte ao tipo de projeto.
 
-### 3. Leia os few-shots
+### 6. Ao finalizar
 
-Antes do prompt 001, leia [`docs/few-shots.md`](docs/few-shots.md) — modelos do que pedir em cada fase.
+1. **Verifique** o resultado (pre-check: lint, test, build — o que existir no projeto)
+2. **Compartilhe** com amigos (link do repo, demo, ou PR)
 
-### 4. Execute os 3 prompts
+### 7. A regra mais importante
 
-| Prompt | Foco sugerido | Commit |
-|--------|---------------|--------|
-| **001** | Planejamento aceito + scaffold + modelos/domínio | `feat: prompt 001 — foundation` |
-| **002** | Features core + testes (≥90%) | `feat: prompt 002 — core` |
-| **003** | Integração, docs, pre-check verde, code-review | `feat: prompt 003 — delivery` |
-
-Após **cada** prompt:
-
-1. IA registra entrada em `prompts/00X-*.md` e atualiza `prompts/linear-log.md`
-2. IA roda pre-check (comandos do projeto)
-3. **Você** (ou a IA, se pedido) faz **1 commit** = 1 prompt
-4. Só então passa ao próximo prompt
-
-### 5. Compartilhe
-
-- Envie o link do repo ou um PR com os 3 commits
-- Compare: qualidade do código, clareza dos prompts, aderência ao log linear
-- Debate: o few-shot ajudou? O plano com aceite evitou retrabalho?
+**Aprenda com o processo e se divirta.**
 
 ---
 
-## Fluxo de cada prompt (o que a IA deve fazer)
+## Como participar
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ 1. Ler prompt do usuário                                 │
-│ 2. Planejamento + aceite (se não trivial)                │
-│ 3. Executar escopo daquele prompt (few-shot como guia)   │
-│ 4. Registrar em prompts/00X-*.md + linear-log.md         │
-│ 5. Pre-check: lint → typecheck → test → build            │
-│ 6. Code-review final (sênior/arquiteto)                  │
-│ 7. 1 commit = entrega do prompt                          │
-└─────────────────────────────────────────────────────────┘
-```
+1. **Clone** o repo e abra no Cursor (regras em `.cursor/rules/`) ou use `@ia-rules.md` em outra IDE.
+2. **Defina** seu projeto (backend/frontend/API) e sua estratégia de few-shot.
+3. **Prompt 001** — comece; registre em `prompts/001-*.md`.
+4. **Siga** até as 3 features obrigatórias estarem prontas.
+5. **Compartilhe** e compare com amigos: prompts, estratégia few-shot, resultado.
+
+Inspiração opcional (não copiar): [`docs/few-shots.md`](docs/few-shots.md)
 
 ---
 
-## Regras de prompt-engineering (resumo)
+## O que tem neste repo
 
-Detalhes completos: `.cursor/rules/prompt-engineering.mdc` e `ia-rules.md` §16.
-
-- **Metaprompt / autoconsciência** — papel sênior, limites, não inventar requisitos
-- **Planejamento com aceite** — plano antes de implementar; aguardar "pode executar"
-- **Chain of Thought** — Entendi → Verifiquei → Decidi → Fiz → Validei
-- **Árvore de decisão** — dúvida → opções A/B com prós/contras antes de codar
-- **Few-shot** — espelhar estrutura dos exemplos em `docs/few-shots.md`
-- **Pre-check** — nunca "concluído" sem pipeline verde
-
----
-
-## Regras de código (resumo)
-
-Detalhes: `.cursor/rules/` e `ia-rules.md`.
-
-- Buscar no projeto antes de criar arquivo/lógica nova
-- Nomes claros e contextuais; constantes em UPPER_CASE
-- Sem libs novas sem permissão
-- Testes ≥ 90% no código alterado; Faker/factories
-- Segurança em camadas; sem secrets/PII expostos
+| Pasta / arquivo | Para quê |
+|-----------------|----------|
+| `.cursor/rules/` | Regras automáticas no Cursor (código sênior + prompt-engineering) |
+| `ia-rules.md` | Mesmas regras, portáveis para outras IDEs |
+| `prompts/` | **Seu** log linear do desafio |
+| `docs/few-shots.md` | Ideias de estrutura de prompt (referência, não obrigatório copiar) |
+| `ia-rules-usage.md` | Como usar as regras de IA |
 
 ---
 
-## Prompt 000 (este setup)
+## Status
 
-O prompt que criou a estrutura do desafio está registrado em [`prompts/000-setup.md`](prompts/000-setup.md).
-
-**A partir do próximo prompt (001)**, valem todas as regras acima.
-
----
-
-## Licença e contribuição
-
-Use livremente para estudar e desafiar amigos. Melhorias nas regras: PRs bem-vindos — lembre de sincronizar `.mdc` + `ia-rules.md` (veja `ia-rules-usage.md`).
+| Item | Status |
+|------|--------|
+| Regras do desafio | ✅ definidas |
+| Prompt 000 (setup) | ✅ [`prompts/000-setup.md`](prompts/000-setup.md) |
+| Prompt 001+ (implementação) | ⏳ aguardando início |
 
 ---
 
-**Boa sorte — e que vença quem promptar melhor, não quem promptar mais.** 🎯
+**Desafie um amigo. Compare prompts, não só código.**

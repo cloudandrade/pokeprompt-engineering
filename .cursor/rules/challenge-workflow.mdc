@@ -1,70 +1,60 @@
 ---
-description: Desafio prompt-engineering — 3 prompts, log linear, 1 commit/prompt, few-shots
+description: Desafio few-shot — log linear, projeto flexível, features obrigatórias, aprender e se divertir
 alwaysApply: true
 ---
 
 # Challenge Workflow — válido a partir do Prompt 001
 
-Este repositório segue o **Prompt Engineering Challenge**. O prompt **000** foi setup; **a partir do 001** estas regras são obrigatórias.
+Desafio de **few-shot prompt-engineering**. Prompt **000** = setup; **001+** = implementação.
 
-## Limites do desafio
+## Objetivo
 
-| Regra | Valor |
-|-------|-------|
-| Prompts de implementação | **Exatamente 3** (001, 002, 003) |
-| Commits de implementação | **1 commit por prompt** |
-| Log linear | **Obrigatório** em `prompts/` |
-| Few-shot | Usar modelos em `docs/few-shots.md` como referência de estrutura |
+Projeto base (backend **ou** frontend **ou** adaptar/consumir API) usando estratégia de few-shots.
 
-## A cada prompt do usuário (001–003)
+## Regras
 
-1. **Identificar fase** — foundation (001) | core (002) | delivery (003)
-2. **Planejamento + aceite** — se escopo não trivial; aguardar "pode executar"
-3. **Executar** apenas o escopo daquele prompt — sem scope creep para fases futuras
-4. **Registrar linearmente:**
-   - Criar/atualizar `prompts/00X-<fase>.md` com: prompt verbatim, entregáveis, CoT, commit hash
-   - Atualizar tabela em `prompts/linear-log.md`
-5. **Pre-check** — lint → typecheck → test → build (comandos do projeto)
-6. **Code-review final** — lente sênior/arquiteto; blockers corrigidos
-7. **Commit único** — mensagem sugerida: `feat: prompt 00X — <fase>`
-8. **Informar usuário** — próximo prompt ou desafio concluído (após 003)
+1. **Estrutura própria** — metaprompt/plano/exemplos do participante; **não copiar** colega.
+2. **Few-shot livre** — participante escolhe estratégias; documentar no log o que funcionou.
+3. **Log linear** — cada prompt → `prompts/00X-<titulo>.md` + atualizar `prompts/linear-log.md`.
+   - **Meta:** 3 prompts; **se precisar de mais**, continuar (`004`, `005`…) até concluir.
+4. **Stack livre** — backend, frontend, API própria ou consumo de API externa.
+5. **Obrigatório no projeto:**
+   - Listar todos os itens **com paginação**
+   - Detalhar **por ID**
+   - Buscar **com filtro**
+6. **Ao finalizar** — verificar resultado (pre-check quando houver projeto) e compartilhar.
+7. **Regra principal** — aprender com o processo e se divertir.
 
-## Formato do registro (`prompts/00X-*.md`)
+## A cada prompt (001+)
+
+1. Executar escopo pedido; aplicar regras de código e prompt-engineering do repo.
+2. **Registrar:** prompt verbatim, entregáveis, CoT, decisões de few-shot em `prompts/00X-*.md`.
+3. Atualizar `prompts/linear-log.md`.
+4. Se houver código: pre-check (lint → typecheck → test → build) quando aplicável.
+5. Commit recomendado por prompt (rastreabilidade).
+
+## Formato do registro
 
 ```markdown
 # Prompt 00X — [título]
-| Índice | 00X |
-| Data | YYYY-MM-DD |
-| Commit | `<hash>` |
-
 ## Prompt do usuário (verbatim)
-> ...
-
+## Estratégia few-shot usada
 ## O que foi feito
-- ...
-
 ## Chain of Thought
-Entendi → Verifiquei → Decidi → Fiz → Validei
+## Próximo passo
 ```
 
-## Projeto alvo (sugerido)
+## Conclusão
 
-API que registra prompts e entregas linearmente (`POST/GET /prompts`). Amigos podem trocar escopo se mantiverem regras do desafio.
+Projeto concluído quando as **3 features obrigatórias** existem, resultado verificado e participante compartilhou.
 
-## Prompt 000
+Não há penalidade por usar mais de 3 prompts — o log completo **é** parte do aprendizado.
 
-Setup já concluído — **não conta** nos 3 prompts de implementação.
-
-## Anti-patterns do desafio
+## Anti-patterns
 
 | Evitar | Fazer |
 |--------|-------|
-| Implementar tudo no prompt 001 | Dividir 001/002/003 |
-| Vários commits num prompt | 1 commit = 1 prompt |
-| Não atualizar linear-log.md | Sempre atualizar índice |
-| Ignorar few-shots | Estruturar prompt como `docs/few-shots.md` |
-| Prompt 004 de implementação | Máximo 3 — consolidar no 003 |
-
-## Conclusão do desafio
-
-Somente após prompt **003** commitado, pre-check verde e `linear-log.md` com 001–003 preenchidos.
+| Copiar estrutura few-shot do colega | Criar a sua; documentar |
+| Não registrar prompts | Um arquivo sequencial por prompt |
+| Projeto sem paginação/filtro/detalhe | Implementar as 3 features obrigatórias |
+| Ignorar verificação final | Pre-check + compartilhar resultado |

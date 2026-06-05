@@ -1,6 +1,6 @@
 # Prompt Engineering Challenge
 
-Desafio para **aprender few-shot prompt-engineering** construindo um projeto real — sozinho ou com amigos.
+Desafio para **praticar few-shot prompt-engineering** construindo um projeto real — sozinho ou com amigos.
 
 > **Ainda não iniciado.** Este README define as regras. O desafio começa no **Prompt 001**.
 
@@ -38,7 +38,6 @@ Cada prompt seu + o que a IA fez → **um arquivo em sequência** na pasta `prom
 
 ```
 prompts/
-├── linear-log.md      ← índice
 ├── 001-....md
 ├── 002-....md
 └── 003-....md
@@ -66,7 +65,7 @@ Válido para REST, GraphQL, tela React, etc. — adapte ao tipo de projeto.
 ### 6. Ao finalizar
 
 1. **Verifique** o resultado (pre-check: lint, test, build — o que existir no projeto)
-2. **Compartilhe** com amigos (link do repo, demo, ou PR)
+2. **Compartilhe** com amigos o resultado final e documente no readme (link do repo, demo, ou PR)
 
 ### 7. A regra mais importante
 
@@ -76,8 +75,8 @@ Válido para REST, GraphQL, tela React, etc. — adapte ao tipo de projeto.
 
 ## Como participar
 
-1. **Clone** o repo e abra no Cursor (regras em `.cursor/rules/`) ou use `@ia-rules.md` em outra IDE.
-2. **Defina** seu projeto (backend/frontend/API) e sua estratégia de few-shot.
+1. **Clone** o repo e abra no seu editor.
+2. **Defina** seu projeto (backend/frontend/API) e sua estratégia de few-shot junto com seu primeiro prompt.
 3. **Prompt 001** — comece; registre em `prompts/001-*.md`.
 4. **Siga** até as 3 features obrigatórias estarem prontas.
 5. **Compartilhe** e compare com amigos: prompts, estratégia few-shot, resultado.
@@ -96,16 +95,6 @@ Inspiração opcional (não copiar): [`docs/few-shots.md`](docs/few-shots.md)
 | `docs/few-shots.md` | Ideias de estrutura de prompt (referência, não obrigatório copiar) |
 | `ia-rules-usage.md` | Como usar as regras de IA |
 
----
 
-## Status
-
-| Item | Status |
-|------|--------|
-| Regras do desafio | ✅ definidas |
-| Prompt 000 (setup) | ✅ [`prompts/000-setup.md`](prompts/000-setup.md) |
-| Prompt 001+ (implementação) | ⏳ aguardando início |
-
----
 
 **Desafie um amigo. Compare prompts, não só código.**

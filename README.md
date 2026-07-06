@@ -2,7 +2,7 @@
 
 Desafio para **praticar few-shot prompt-engineering** construindo um projeto real — sozinho ou com amigos.
 
-> **Ainda não iniciado.** Este README define as regras. O desafio começa no **Prompt 001**.
+> **Prompt 001 concluído.** App em [`pokedex-app/`](pokedex-app/). Log em [`prompts/001-pokedex-foundation.md`](prompts/001-pokedex-foundation.md).
 
 ---
 
